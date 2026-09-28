@@ -1,0 +1,143 @@
+# Publishes @ninjavault/cdn to npm with Trusted Publishing (OIDC) - no long-lived npm token.
+#
+# npm trusted-publisher settings (npmjs.com > Packages > @ninjavault/cdn > Settings > Trusted publishing):
+#   Publisher:          GitHub Actions
+#   Organization/user:  alisaivi786
+#   Repository:         NinjaVault-Node
+#   Workflow filename:  publish.yml
+#   Environment name:   npm
+# Prerequisites: the `@ninjavault` organization must exist on npmjs.com, and package.json `repository.url`
+# must match this GitHub repository exactly. Trusted publishing needs npm CLI >= 11.5.1 and Node >= 22.14.0
+# on a GitHub-hosted runner (self-hosted runners are not supported). Provenance is generated automatically.
+#
+# First publish: a trusted publisher is configured on an EXISTING package's settings page, so the very first
+# version cannot use OIDC. For that one run, add a granular npm access token (publish rights on @ninjavault)
+# as the repository secret NPM_TOKEN; the workflow then publishes with it. Afterwards configure the trusted
+# publisher, delete the NPM_TOKEN secret and revoke the token; every later release uses OIDC.
+# See docs/RELEASING.md.
+#
+# Runs on every push to main that touches the package. It publishes only when package.json's version is not
+# on npm yet, so a release is: bump "version" + add changesets/<version>.md + merge to main.
+name: Publish
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "package.json"
+      - "package-lock.json"
+      - "changesets/**"
+      - "README.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: write # git tag + GitHub release
+      id-token: write # OIDC token for npm trusted publishing (and provenance)
+    steps:
+      - uses: actions/checkout@v7
+
+      # No registry-url here on purpose: setup-node would write an .npmrc with a placeholder auth token,
+      # which is not needed for OIDC. The token fallback below writes its own .npmrc.
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Use npm 11.5.1 or later (required for trusted publishing)
+        run: |
+          npm install -g npm@^11.5.1
+          npm --version
+
+      - name: Find version to publish
+        id: plan
+        run: |
+          name=$(node -p "require('./package.json').name")
+          version=$(node -p "require('./package.json').version")
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if npm view "$name@$version" version >/dev/null 2>&1; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "$name@$version is already on npm."
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+            echo "$name@$version is not on npm yet: publishing."
+          fi
+
+      - name: Nothing to publish
+        if: steps.plan.outputs.publish != 'true'
+        run: echo "Version ${{ steps.plan.outputs.version }} is already on npm. Bump \"version\" and add a change-set to release."
+
+      - name: Install
+        if: steps.plan.outputs.publish == 'true'
+        run: npm ci
+
+      - name: Checks (format, lint, types, coverage, build, publint, attw, change-set)
+        if: steps.plan.outputs.publish == 'true'
+        run: npm run check
+
+      - name: Smoke test
+        if: steps.plan.outputs.publish == 'true'
+        run: npm run test:smoke
+
+      - name: Pack
+        if: steps.plan.outputs.publish == 'true'
+        id: pack
+        run: |
+          tarball=$(npm pack --silent | tail -n1)
+          echo "tarball=$tarball" >> "$GITHUB_OUTPUT"
+          echo "Packed $tarball"
+
+      - name: Publish to npm
+        if: steps.plan.outputs.publish == 'true'
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -n "$NPM_TOKEN" ]; then
+            echo "NPM_TOKEN is set: publishing with the token (one-time first-publish fallback)."
+            echo "//registry.npmjs.org/:_authToken=\${NODE_AUTH_TOKEN}" > "$RUNNER_TEMP/.npmrc"
+            NODE_AUTH_TOKEN="$NPM_TOKEN" NPM_CONFIG_USERCONFIG="$RUNNER_TEMP/.npmrc" \
+              npm publish "${{ steps.pack.outputs.tarball }}" --provenance --access public
+          else
+            echo "Publishing with npm trusted publishing (OIDC)."
+            npm publish "${{ steps.pack.outputs.tarball }}" --provenance --access public
+          fi
+
+      - name: Tag and create GitHub release
+        if: steps.plan.outputs.publish == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.plan.outputs.version }}
+          NAME: ${{ steps.plan.outputs.name }}
+          TARBALL: ${{ steps.pack.outputs.tarball }}
+        run: |
+          tag="v$VERSION"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag already exists."
+            exit 0
+          fi
+          gh release create "$tag" \
+            --target "$GITHUB_SHA" \
+            --title "$NAME $VERSION" \
+            --notes-file "changesets/$VERSION.md" \
+            "$TARBALL"
+
+      - name: Summary
+        if: steps.plan.outputs.publish == 'true'
+        run: |
+          {
+            echo "### Published to npm"
+            echo "- [${{ steps.plan.outputs.name }}@${{ steps.plan.outputs.version }}](https://www.npmjs.com/package/${{ steps.plan.outputs.name }}/v/${{ steps.plan.outputs.version }})"
+          } >> "$GITHUB_STEP_SUMMARY"

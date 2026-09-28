@@ -1,0 +1,28 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns: ["*"]
+
+  # Dev tooling only: the published package has zero runtime dependencies.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      lint-and-format:
+        patterns: ["eslint", "@eslint/*", "typescript-eslint", "globals", "prettier"]
+      test:
+        patterns: ["vitest", "@vitest/*"]
+      build-and-types:
+        patterns: ["typescript", "tsup", "@types/*", "publint", "@arethetypeswrong/*"]
+    ignore:
+      # typescript-eslint supports TypeScript < 6.1 and tsup's DTS build uses the TypeScript JS API;
+      # move to a new TypeScript major deliberately, not via Dependabot.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
