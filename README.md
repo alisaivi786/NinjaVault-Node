@@ -10,6 +10,7 @@
 
 <p align="center">
   <a href="https://www.npmjs.com/package/@ninjavault/cdn"><img src="https://img.shields.io/npm/v/@ninjavault/cdn.svg?label=%40ninjavault%2Fcdn" alt="npm version" /></a>
+  <a href="https://www.npmjs.com/package/@ninjavault/cdn"><img src="https://img.shields.io/npm/dm/@ninjavault/cdn.svg" alt="npm downloads" /></a>
   <a href="https://www.npmjs.com/package/@ninjavault/cdn"><img src="https://img.shields.io/node/v/@ninjavault/cdn.svg" alt="Node version" /></a>
   <a href="https://github.com/alisaivi786/NinjaVault-Node/actions/workflows/ci.yml"><img src="https://github.com/alisaivi786/NinjaVault-Node/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://github.com/alisaivi786/NinjaVault-Node/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="MIT" /></a>
@@ -334,7 +335,7 @@ page), `errorCode` is `undefined` and the raw body (truncated) is in `descriptio
 
 ---
 
-## Logging and correlation
+## Logging, correlation and retries
 
 `@ninjavault/cdn` logs nothing by itself. Attach whatever your app uses through `hooks`. Header values passed
 to hooks have the API key replaced by `[REDACTED]`, so they are safe to log.
@@ -369,7 +370,7 @@ CDN call. `setHeader` cannot change `X-Api-Key`.
 
 ---
 
-## Retries
+### Retries
 
 The SDK never retries on its own, because uploads and deletes are not always safe to repeat. Retry where it
 makes sense for you, and respect `retryAfterMs`:
@@ -395,7 +396,7 @@ const buckets = await withRetry(() => cdn.listBuckets());
 
 ---
 
-## Testing your code
+## Unit testing your code
 
 Inject a fake `fetch`; no network, no mocking library needed:
 
@@ -438,18 +439,25 @@ Or depend on the class's shape in your own code and substitute a stub:
 
 ## Compatibility
 
-|              |                                                                                                          |
-| ------------ | -------------------------------------------------------------------------------------------------------- |
-| Runtimes     | Node.js 18+, Bun, Deno, and edge runtimes with `fetch` (server-side only)                                |
-| Modules      | ESM (`import`) and CommonJS (`require`)                                                                  |
-| TypeScript   | Types included (`.d.ts` and `.d.cts`), `strict` and `exactOptionalPropertyTypes` friendly                |
-| Dependencies | none                                                                                                     |
-| Version      | `100.42.1` is the same release as `NinjaVault.Cdn` `100.42.0.1` on NuGet (npm needs three-part versions) |
+|              |                                                                                                                  |
+| ------------ | ---------------------------------------------------------------------------------------------------------------- |
+| Runtimes     | Node.js 18+, Bun, Deno, and edge runtimes with `fetch` (server-side only)                                        |
+| Modules      | ESM (`import`) and CommonJS (`require`)                                                                          |
+| TypeScript   | Types included (`.d.ts` and `.d.cts`), `strict` and `exactOptionalPropertyTypes` friendly                        |
+| Dependencies | none                                                                                                             |
+| Version      | Same number in every NinjaVault SDK: `@ninjavault/cdn`, `ninjavault-cdn` and `NinjaVault.Cdn` are all `100.42.1` |
 
-## Other languages
+## NinjaVault SDKs
 
-- **.NET**: [`NinjaVault.Cdn`](https://www.nuget.org/packages/NinjaVault.Cdn) on NuGet ([source](https://github.com/alisaivi786/NinjaVault))
-- **Python**: [`ninjavault-cdn`](https://github.com/alisaivi786/NinjaVault-Python)
+The same CDN client in every language, with the same features and the **same version number** (for example `100.42.1` everywhere):
+
+| Language     | Package                                                            | Install                             | Source                                                                |
+| ------------ | ------------------------------------------------------------------ | ----------------------------------- | --------------------------------------------------------------------- |
+| .NET 8+      | [`NinjaVault.Cdn`](https://www.nuget.org/packages/NinjaVault.Cdn)  | `dotnet add package NinjaVault.Cdn` | [NinjaVault](https://github.com/alisaivi786/NinjaVault)               |
+| Python 3.10+ | [`ninjavault-cdn`](https://pypi.org/project/ninjavault-cdn/)       | `pip install ninjavault-cdn`        | [NinjaVault-Python](https://github.com/alisaivi786/NinjaVault-Python) |
+| Node.js 18+  | [`@ninjavault/cdn`](https://www.npmjs.com/package/@ninjavault/cdn) | `npm install @ninjavault/cdn`       | [NinjaVault-Node](https://github.com/alisaivi786/NinjaVault-Node)     |
+
+---
 
 ## Links
 

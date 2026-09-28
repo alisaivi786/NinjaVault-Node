@@ -29,11 +29,11 @@
 
 npm never lets a version be published twice. Always bump the version for a new release.
 
-### Version mapping to NuGet
+### One version number for every SDK
 
-npm needs three-part semantic versions. A NuGet version `A.B.0.C` of `NinjaVault.Cdn` is published here as
-`A.B.C` when the feature set is the same (for example NuGet `100.42.0.1` is npm `100.42.1`). Say so in the
-change-set.
+All NinjaVault SDKs share the same three-part version (npm only allows three parts): `@ninjavault/cdn`,
+`ninjavault-cdn` (PyPI) and `NinjaVault.Cdn` (NuGet) are all `100.42.1`. When a release changes the shared
+feature set, release every SDK with the same new number.
 
 ## One-time setup
 
