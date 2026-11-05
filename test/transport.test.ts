@@ -37,7 +37,7 @@ describe("upload", () => {
     const fetch = mockFetch(() => ok({ ...UPLOAD_RESULT, viewUrl: null }));
     const result = await createClient(fetch).upload({
       bucket: "documents",
-      tenantId: 42,
+      tenantId: "0f8fad5b-d9cb-469f-a165-70867728950e",
       file: new TextEncoder().encode("payload"),
       fileName: "invoice.pdf",
       contentType: "application/pdf",
@@ -56,7 +56,7 @@ describe("upload", () => {
     expect(form).toBeInstanceOf(FormData);
     expect([...form.keys()]).toEqual(["Bucket", "TenantId", "OwnerId", "FolderPath", "File"]);
     expect(form.get("Bucket")).toBe("documents");
-    expect(form.get("TenantId")).toBe("42");
+    expect(form.get("TenantId")).toBe("0f8fad5b-d9cb-469f-a165-70867728950e");
     expect(form.get("OwnerId")).toBe("1001");
     expect(form.get("FolderPath")).toBe("invoices/2026");
     const file = form.get("File") as File;
@@ -71,7 +71,7 @@ describe("upload", () => {
     expect(result).toEqual({ ...UPLOAD_RESULT, viewUrl: null });
   });
 
-  it("omits OwnerId and FolderPath when not given, and accepts GUID tenant ids and bigint", async () => {
+  it("omits OwnerId and FolderPath when not given, and trims GUID tenant ids; still accepts legacy numeric ids from JS callers", async () => {
     const fetch = mockFetch(() => ok(UPLOAD_RESULT));
     const client = createClient(fetch);
     const result = await client.upload({
@@ -88,6 +88,7 @@ describe("upload", () => {
 
     await client.upload({
       bucket: "b",
+      // @ts-expect-error: tenantId is typed string; plain-JS callers of older versions may still pass a bigint
       tenantId: 9007199254740993n,
       ownerId: "77",
       file: new Uint8Array(1),
@@ -103,15 +104,21 @@ describe("upload", () => {
     const client = createClient(fetch);
     const blob = new Blob(["hello"], { type: "text/plain" });
 
-    await client.upload({ bucket: "b", tenantId: 1, file: blob, fileName: "a.txt" });
+    await client.upload({ bucket: "b", tenantId: "1", file: blob, fileName: "a.txt" });
     await client.upload({
       bucket: "b",
-      tenantId: 1,
+      tenantId: "1",
       file: blob,
       fileName: "a.txt",
       contentType: "text/plain",
     });
-    await client.upload({ bucket: "b", tenantId: 1, file: blob, fileName: "a.csv", contentType: "text/csv" });
+    await client.upload({
+      bucket: "b",
+      tenantId: "1",
+      file: blob,
+      fileName: "a.csv",
+      contentType: "text/csv",
+    });
 
     const files = fetch.requests.map((r) => (r.body as FormData).get("File") as File);
     expect(files.map((f) => f.type)).toEqual(["text/plain", "text/plain", "text/csv"]);
@@ -123,7 +130,7 @@ describe("upload", () => {
     const bytes = new TextEncoder().encode("xxHELLOxx");
     await createClient(fetch).upload({
       bucket: "b",
-      tenantId: 1,
+      tenantId: "1",
       file: new DataView(bytes.buffer, 2, 5),
       fileName: "a.txt",
     });
@@ -134,13 +141,14 @@ describe("upload", () => {
   it("validates the request", async () => {
     const client = createClient(mockFetch(() => ok(UPLOAD_RESULT)));
     const file = new Uint8Array(1);
-    await expect(client.upload({ bucket: "", tenantId: 1, file, fileName: "a" })).rejects.toThrow("bucket");
-    await expect(client.upload({ bucket: "b", tenantId: 1, file, fileName: " " })).rejects.toThrow(
+    await expect(client.upload({ bucket: "", tenantId: "1", file, fileName: "a" })).rejects.toThrow("bucket");
+    await expect(client.upload({ bucket: "b", tenantId: "1", file, fileName: " " })).rejects.toThrow(
       "fileName",
     );
     await expect(client.upload({ bucket: "b", tenantId: "", file, fileName: "a" })).rejects.toThrow(
       "tenantId",
     );
+    // @ts-expect-error: runtime guards for JS callers
     await expect(client.upload({ bucket: "b", tenantId: Number.NaN, file, fileName: "a" })).rejects.toThrow(
       "finite",
     );
@@ -149,11 +157,11 @@ describe("upload", () => {
       "tenantId is required.",
     );
     // @ts-expect-error: runtime guards for JS callers
-    await expect(client.upload({ bucket: "b", tenantId: 1, fileName: "a" })).rejects.toThrow(
+    await expect(client.upload({ bucket: "b", tenantId: "1", fileName: "a" })).rejects.toThrow(
       "file is required.",
     );
     // @ts-expect-error: runtime guards for JS callers
-    await expect(client.upload({ bucket: "b", tenantId: 1, file: "text", fileName: "a" })).rejects.toThrow(
+    await expect(client.upload({ bucket: "b", tenantId: "1", file: "text", fileName: "a" })).rejects.toThrow(
       "file must be a Blob",
     );
     // @ts-expect-error: runtime guards for JS callers

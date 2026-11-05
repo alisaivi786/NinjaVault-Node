@@ -59,7 +59,7 @@ if (!(new CdnApiError("x", { statusCode: 400 }) instanceof Error)) throw new Err
 (async () => {
   const buckets = await cdn.listBuckets();
   if (buckets[0].name !== "documents") throw new Error("listBuckets failed");
-  const uploaded = await cdn.upload({ bucket: "documents", tenantId: 1, file: new TextEncoder().encode("payload"), fileName: "a.txt", contentType: "text/plain" });
+  const uploaded = await cdn.upload({ bucket: "documents", tenantId: "1", file: new TextEncoder().encode("payload"), fileName: "a.txt", contentType: "text/plain" });
   if (uploaded.objectKey !== "k/a.txt") throw new Error("upload failed");
   const download = await cdn.download("documents", "k/a.txt");
   if (download.fileName !== "a.txt" || (await download.text()) !== "file-bytes") throw new Error("download failed");

@@ -59,7 +59,7 @@ const cdn = new NinjaVaultCdnClient(); // reads NINJAVAULT_CDN_* from the enviro
 
 const file = await cdn.upload({
   bucket: "documents",
-  tenantId: 42,
+  tenantId: "0f8fad5b-d9cb-469f-a165-70867728950e",
   file: pdfBytes, // Blob | ArrayBuffer | Uint8Array
   fileName: "invoice.pdf",
   contentType: "application/pdf",
@@ -111,6 +111,9 @@ const access = await cdn.getAccessContext();
 console.log(access.name, access.isUnrestricted, access.allowedTenantIds);
 ```
 
+Tenant ids are always strings (GUIDs, e.g. `"0f8fad5b-d9cb-469f-a165-70867728950e"`), both when you send them and when the
+API returns them.
+
 ---
 
 ## Usage
@@ -122,7 +125,7 @@ Every async method takes an optional last argument `{ signal }` (an `AbortSignal
 ```ts
 const uploaded = await cdn.upload({
   bucket: "documents",
-  tenantId: 42, // positive integer or GUID string
+  tenantId: "0f8fad5b-d9cb-469f-a165-70867728950e", // tenant GUID, as a string
   file: bytes, // Blob | ArrayBuffer | Uint8Array
   fileName: "report.docx",
   contentType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -147,7 +150,7 @@ const file = await openAsBlob("./invoice.pdf", { type: "application/pdf" });
 
 await cdn.upload({
   bucket: "documents",
-  tenantId: 42,
+  tenantId: "0f8fad5b-d9cb-469f-a165-70867728950e",
   file,
   fileName: "invoice.pdf",
   contentType: "application/pdf",
@@ -260,7 +263,7 @@ import { FileCategory, FileSortBy } from "@ninjavault/cdn";
 
 const page = await cdn.listFiles({
   bucket: "documents",
-  tenantId: 42,
+  tenantId: "0f8fad5b-d9cb-469f-a165-70867728950e",
   ownerId: 1001,
   objectKeyPrefix: "reports/2026",
   fileNameContains: "invoice",
@@ -445,11 +448,11 @@ Or depend on the class's shape in your own code and substitute a stub:
 | Modules      | ESM (`import`) and CommonJS (`require`)                                                                          |
 | TypeScript   | Types included (`.d.ts` and `.d.cts`), `strict` and `exactOptionalPropertyTypes` friendly                        |
 | Dependencies | none                                                                                                             |
-| Version      | Same number in every NinjaVault SDK: `@ninjavault/cdn`, `ninjavault-cdn` and `NinjaVault.Cdn` are all `100.42.1` |
+| Version      | Same number in every NinjaVault SDK: `@ninjavault/cdn`, `ninjavault-cdn` and `NinjaVault.Cdn` are all `100.43.0` |
 
 ## NinjaVault SDKs
 
-The same CDN client in every language, with the same features and the **same version number** (for example `100.42.1` everywhere):
+The same CDN client in every language, with the same features and the **same version number** (for example `100.43.0` everywhere):
 
 | Language     | Package                                                            | Install                             | Source                                                                |
 | ------------ | ------------------------------------------------------------------ | ----------------------------------- | --------------------------------------------------------------------- |

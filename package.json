@@ -1,6 +1,6 @@
 {
   "name": "@ninjavault/cdn",
-  "version": "100.42.1",
+  "version": "100.43.0",
   "description": "Typed, zero-dependency Node.js / TypeScript client for the NinjaVault CDN Server: upload, search, download, delete, public and presigned URLs.",
   "keywords": [
     "ninjavault",

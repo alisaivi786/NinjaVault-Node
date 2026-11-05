@@ -110,7 +110,7 @@ export interface AccessContext {
   isUnrestricted: boolean;
   isAdmin: boolean;
   allowedBuckets: string[];
-  /** Tenant ids the key is scoped to (numeric ids or GUIDs, as strings). */
+  /** Tenant ids the key is scoped to, as strings (GUIDs; older tenants may have numeric ids such as `"42"`). */
   allowedTenantIds: string[];
   buckets: AccessBucket[];
 }
@@ -149,7 +149,7 @@ export interface UploadResult {
 /** Full file detail returned by the list and metadata routes. */
 export interface FileObject {
   id: string;
-  /** Tenant id as a string (numeric id or GUID). */
+  /** Tenant id as a string (a GUID; older tenants may have numeric ids such as `"42"`). */
   tenantId: string;
   ownerId: number | null;
   bucket: string;
@@ -249,8 +249,8 @@ export type UploadBody = Blob | ArrayBuffer | ArrayBufferView;
  */
 export interface UploadRequest {
   bucket: string;
-  /** Tenant to store the file under: a positive integer (e.g. `42`) or a GUID. */
-  tenantId: string | number | bigint;
+  /** Tenant to store the file under, as a string: the tenant GUID, e.g. `"0f8fad5b-d9cb-469f-a165-70867728950e"`. */
+  tenantId: string;
   file: UploadBody;
   /** Original file name sent in the multipart `File` part. */
   fileName: string;
@@ -264,7 +264,8 @@ export interface UploadRequest {
 /** Filters for `listFiles`. Every field is optional; omitted fields use the server defaults. */
 export interface FileListQuery {
   bucket?: string | undefined;
-  tenantId?: string | number | bigint | undefined;
+  /** Tenant GUID, as a string. */
+  tenantId?: string | undefined;
   ownerId?: number | bigint | string | undefined;
   /** Matches the start of the object key (the nearest thing to a folder path). */
   objectKeyPrefix?: string | undefined;

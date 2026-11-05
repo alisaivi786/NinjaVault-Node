@@ -267,7 +267,7 @@ describe("listFiles query building", () => {
     const fetch = mockFetch(() => ok({ items: [FILE_OBJECT], totalCount: 1, page: 2, pageSize: 25 }));
     const page = await createClient(fetch).listFiles({
       bucket: "documents",
-      tenantId: 42,
+      tenantId: "0f8fad5b-d9cb-469f-a165-70867728950e",
       ownerId: 1001n,
       objectKeyPrefix: "owner-token/invoices",
       fileNameContains: "inv oice",
@@ -284,7 +284,7 @@ describe("listFiles query building", () => {
     });
 
     expect(fetch.single().url).toBe(
-      "https://cdn.test/api/v1/files?bucket=documents&tenantId=42&ownerId=1001" +
+      "https://cdn.test/api/v1/files?bucket=documents&tenantId=0f8fad5b-d9cb-469f-a165-70867728950e&ownerId=1001" +
         "&objectKeyPrefix=owner-token%2Finvoices&fileNameContains=inv%20oice" +
         "&contentType=application%2Fpdf&category=Document&visibility=Private" +
         "&createdFromUTC=2025-12-31T22%3A00%3A00.000Z&createdToUTC=2026-02-01T00%3A00%3A00.000Z" +

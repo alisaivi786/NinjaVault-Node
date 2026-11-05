@@ -32,7 +32,7 @@ npm never lets a version be published twice. Always bump the version for a new r
 ### One version number for every SDK
 
 All NinjaVault SDKs share the same three-part version (npm only allows three parts): `@ninjavault/cdn`,
-`ninjavault-cdn` (PyPI) and `NinjaVault.Cdn` (NuGet) are all `100.42.1`. When a release changes the shared
+`ninjavault-cdn` (PyPI) and `NinjaVault.Cdn` (NuGet) are all `100.43.0`. When a release changes the shared
 feature set, release every SDK with the same new number.
 
 ## One-time setup
