@@ -51,7 +51,7 @@ jobs:
 
       # No registry-url here on purpose: setup-node would write an .npmrc with a placeholder auth token,
       # which is not needed for OIDC. The token fallback below writes its own .npmrc.
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
